@@ -1,0 +1,37 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Apollo in-app clipboard get — no Termux:API APK required.
+set -euo pipefail
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+export PATH="$PREFIX/bin:$PATH"
+
+SCRIPTNAME=termux-clipboard-get
+show_usage() {
+  echo "Usage: $SCRIPTNAME"
+  echo "Get clipboard text."
+  exit 0
+}
+while getopts :h opt; do
+  case "$opt" in
+    h) show_usage ;;
+    *) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1 ;;
+  esac
+done
+
+if [ -x "$PREFIX/libexec/termux-api" ] && pm path com.termux.api >/dev/null 2>&1; then
+  "$PREFIX/libexec/termux-api" Clipboard -e api_version 2 --ez set false
+  exit $?
+fi
+
+TMPDIR="${TMPDIR:-$PREFIX/tmp}"
+mkdir -p "$TMPDIR"
+f=$(mktemp "$TMPDIR/apollo-clip-out.XXXXXX")
+trap 'rm -f "$f"' EXIT
+
+am broadcast -n com.termux/.app.api.ClipboardApiReceiver \
+  --ez apollo_simple true --ez set false --es outfile "$f" --es donefile "$f.done" >/dev/null
+
+for _ in $(seq 1 40); do
+  [ -f "$f.done" ] && break
+  sleep 0.05
+done
+cat "$f"

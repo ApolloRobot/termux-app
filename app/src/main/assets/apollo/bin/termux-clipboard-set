@@ -1,0 +1,47 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Apollo in-app clipboard set — no Termux:API APK required.
+# Compatible with android-worker-node input path (stdin or args).
+set -euo pipefail
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+HOME="${HOME:-/data/data/com.termux/files/home}"
+export PATH="$PREFIX/bin:$PATH"
+
+SCRIPTNAME=termux-clipboard-set
+show_usage() {
+  echo "Usage: $SCRIPTNAME [text]"
+  echo "Set clipboard text from args or stdin."
+  exit 0
+}
+while getopts :h opt; do
+  case "$opt" in
+    h) show_usage ;;
+    *) echo "$SCRIPTNAME: illegal option -$OPTARG"; exit 1 ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+TMPDIR="${TMPDIR:-$PREFIX/tmp}"
+mkdir -p "$TMPDIR"
+f=$(mktemp "$TMPDIR/apollo-clip.XXXXXX")
+trap 'rm -f "$f"' EXIT
+
+if [ "$#" -gt 0 ]; then
+  printf '%s' "$*" >"$f"
+else
+  cat >"$f"
+fi
+
+# Prefer stock libexec if Termux:API APK is installed and socket works; else in-app.
+if [ -x "$PREFIX/libexec/termux-api" ] && pm path com.termux.api >/dev/null 2>&1; then
+  "$PREFIX/libexec/termux-api" Clipboard -e api_version 2 --ez set true <"$f" && exit 0
+fi
+
+am broadcast -n com.termux/.app.api.ClipboardApiReceiver \
+  --ez apollo_simple true --ez set true --es file "$f" --es donefile "$f.done" >/dev/null
+
+for _ in $(seq 1 40); do
+  [ -f "$f.done" ] && exit 0
+  sleep 0.05
+done
+echo "$SCRIPTNAME: clipboard set timed out" >&2
+exit 1

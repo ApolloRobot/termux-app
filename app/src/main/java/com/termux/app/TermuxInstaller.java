@@ -221,6 +221,12 @@ final class TermuxInstaller {
                     // Recreate env file since termux prefix was wiped earlier
                     TermuxShellEnvironment.writeEnvironmentToFile(activity);
 
+                    // Apollo: clipboard shims + boot scripts after PREFIX is ready
+                    try {
+                        com.termux.app.setup.ApolloSetup.ensureClipboardShims(activity);
+                        com.termux.app.setup.ApolloSetup.ensureDefaultBootScripts(activity);
+                    } catch (Exception ignored) {}
+
                     activity.runOnUiThread(whenDone);
 
                 } catch (final Exception e) {

@@ -200,6 +200,10 @@
             android:exported="false" />
 
         <receiver
+            android:name=".app.api.ClipboardApiReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".shared.activities.ReportActivity$ReportActivityBroadcastReceiver"
             android:exported="false" />
 

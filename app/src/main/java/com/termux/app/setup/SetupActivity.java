@@ -96,9 +96,9 @@ public class SetupActivity extends AppCompatActivity {
                 mStep = Step.CLIPBOARD_API;
                 break;
             case CLIPBOARD_API:
-                if (!ApolloSetup.isTermuxApiInstalled(this)) {
-                    Toast.makeText(this, R.string.apollo_setup_api_missing_toast, Toast.LENGTH_LONG).show();
-                    // allow continue but warn — clipboard input will fail until API APK installed
+                ApolloSetup.ensureClipboardShims(this);
+                if (!ApolloSetup.isClipboardReady()) {
+                    Toast.makeText(this, R.string.apollo_setup_clipboard_pending_toast, Toast.LENGTH_LONG).show();
                 }
                 mStep = Step.DONE;
                 break;
@@ -109,6 +109,7 @@ public class SetupActivity extends AppCompatActivity {
                     break;
                 }
                 ApolloSetup.ensureDefaultBootScripts(this);
+                ApolloSetup.ensureClipboardShims(this);
                 ApolloSetup.setSetupDone(this, true);
                 openTerminal(true);
                 return;
@@ -171,9 +172,10 @@ public class SetupActivity extends AppCompatActivity {
                 mSecondary.setVisibility(View.GONE);
                 break;
             case CLIPBOARD_API:
-                boolean api = ApolloSetup.isTermuxApiInstalled(this);
-                mStatus.setText(api ? R.string.apollo_setup_api_ok_title : R.string.apollo_setup_api_title);
-                mDetail.setText(api ? R.string.apollo_setup_api_ok_body : R.string.apollo_setup_api_body);
+                ApolloSetup.ensureClipboardShims(this);
+                boolean clipOk = ApolloSetup.isClipboardReady();
+                mStatus.setText(clipOk ? R.string.apollo_setup_clipboard_ok_title : R.string.apollo_setup_clipboard_title);
+                mDetail.setText(clipOk ? R.string.apollo_setup_clipboard_ok_body : R.string.apollo_setup_clipboard_body);
                 mPrimary.setText(R.string.apollo_setup_next);
                 mSecondary.setVisibility(View.GONE);
                 break;

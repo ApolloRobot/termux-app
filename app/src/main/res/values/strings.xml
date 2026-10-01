@@ -243,7 +243,7 @@
     <string name="apollo_setup_rerun">重新检查</string>
     <string name="apollo_setup_open_terminal">打开终端</string>
     <string name="apollo_setup_welcome_title">欢迎使用掌玩 Worker</string>
-    <string name="apollo_setup_welcome_body">本 App 基于 Termux 封装。\n\n业务脚本通过 ADB 操控其它 App；剪贴板输入依赖 Termux:API；开机后由本 App 自动执行 ~/.termux/boot 脚本拉起 sshd / OpenClaw。\n\n请按向导完成必要设置，否则无法正常发帖与运维。</string>
+    <string name="apollo_setup_welcome_body">本 App 基于 Termux 封装。\n\n业务脚本通过 ADB 操控其它 App；剪贴板已内置进本 App（无需再装 Termux:API）；开机后自动执行 ~/.termux/boot 脚本拉起 sshd / OpenClaw。\n\n请按向导完成必要设置，否则无法正常发帖与运维。</string>
     <string name="apollo_setup_battery_title">关闭电池优化</string>
     <string name="apollo_setup_battery_body">请允许「不受电池优化」，否则开机后进程容易被系统杀掉，MQTT / OpenClaw 会掉线。</string>
     <string name="apollo_setup_battery_action">去授权</string>
@@ -255,11 +255,16 @@
     <string name="apollo_setup_adb_required_toast">未开启 USB 调试，无法继续。这是控 App 的必需能力。</string>
     <string name="apollo_setup_boot_title">开机自启脚本</string>
     <string name="apollo_setup_boot_body">已内置 Termux:Boot 能力。默认脚本会安装到：\n%1$s\n\n开机后自动拉起 sshd 与 OpenClaw 相关服务（可按机子再改脚本）。</string>
+    <string name="apollo_setup_clipboard_title">安装剪贴板脚本</string>
+    <string name="apollo_setup_clipboard_body">剪贴板能力已内置。将把 termux-clipboard-set / get 写入 $PREFIX/bin。\n若尚未完成 bootstrap（首次解压环境），请先进入终端完成安装后再回到本页。</string>
+    <string name="apollo_setup_clipboard_ok_title">剪贴板已就绪</string>
+    <string name="apollo_setup_clipboard_ok_body">已安装 in-app 剪贴板脚本，发帖中文输入不再需要单独的 Termux:API APK。</string>
+    <string name="apollo_setup_clipboard_pending_toast">PREFIX/bin 尚不可用。请先打开终端完成 bootstrap，再重新检查。</string>
     <string name="apollo_setup_api_title">还需要 Termux:API（剪贴板）</string>
-    <string name="apollo_setup_api_body">中文输入走 termux-clipboard-set，必须安装同签名的 Termux:API APK（包名 com.termux.api）。\n本试验版尚未把 Clipboard 并进主包；请用同一签名安装 API 插件后再继续。</string>
+    <string name="apollo_setup_api_body">（已废弃）剪贴板已内置。</string>
     <string name="apollo_setup_api_ok_title">Termux:API 已安装</string>
-    <string name="apollo_setup_api_ok_body">已检测到 com.termux.api，剪贴板输入可用。</string>
-    <string name="apollo_setup_api_missing_toast">未检测到 Termux:API，发帖输入可能失败。可稍后安装同签名 API APK。</string>
+    <string name="apollo_setup_api_ok_body">已检测到 com.termux.api。</string>
+    <string name="apollo_setup_api_missing_toast">未检测到剪贴板脚本。</string>
     <string name="apollo_setup_done_title">就绪检查</string>
     <string name="apollo_setup_done_body">ADB 为硬门槛：未开启时请勿认为设备已可用。\n进入工作台后即是 Termux 终端环境。</string>
 
