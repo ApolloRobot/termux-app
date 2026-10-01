@@ -37,7 +37,30 @@
             android:textColor="#C8D0D8"
             android:textSize="15sp"
             android:lineSpacingExtra="4dp"
-            android:paddingBottom="24dp" />
+            android:paddingBottom="16dp" />
+
+        <EditText
+            android:id="@+id/apollo_setup_sn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/apollo_setup_sn_hint"
+            android:inputType="textCapCharacters"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#668088"
+            android:visibility="gone"
+            android:paddingBottom="16dp" />
+
+        <TextView
+            android:id="@+id/apollo_setup_log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#8FA0AA"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:visibility="gone"
+            android:paddingBottom="16dp"
+            android:maxLines="12"
+            android:scrollbars="vertical" />
 
         <Button
             android:id="@+id/apollo_setup_primary"

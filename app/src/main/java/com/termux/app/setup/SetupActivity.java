@@ -3,10 +3,13 @@ package com.termux.app.setup;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,7 +21,7 @@ import com.termux.app.TermuxActivity;
 import com.termux.shared.logger.Logger;
 
 /**
- * First-run wizard. ADB is a hard gate — without it Termux cannot drive other apps.
+ * First-run wizard. ADB is a hard gate; OpenClaw is installed in-app after SN is set.
  */
 public class SetupActivity extends AppCompatActivity {
 
@@ -26,9 +29,13 @@ public class SetupActivity extends AppCompatActivity {
 
     private TextView mStatus;
     private TextView mDetail;
+    private TextView mLog;
+    private EditText mSnInput;
     private Button mPrimary;
     private Button mSecondary;
     private Button mSkipTerminal;
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private Runnable mPollInstall;
 
     private enum Step {
         WELCOME,
@@ -36,6 +43,7 @@ public class SetupActivity extends AppCompatActivity {
         ADB,
         BOOT_SCRIPTS,
         CLIPBOARD_API,
+        OPENCLAW,
         DONE
     }
 
@@ -48,6 +56,8 @@ public class SetupActivity extends AppCompatActivity {
 
         mStatus = findViewById(R.id.apollo_setup_status);
         mDetail = findViewById(R.id.apollo_setup_detail);
+        mLog = findViewById(R.id.apollo_setup_log);
+        mSnInput = findViewById(R.id.apollo_setup_sn);
         mPrimary = findViewById(R.id.apollo_setup_primary);
         mSecondary = findViewById(R.id.apollo_setup_secondary);
         mSkipTerminal = findViewById(R.id.apollo_setup_open_terminal);
@@ -56,14 +66,23 @@ public class SetupActivity extends AppCompatActivity {
         mSecondary.setOnClickListener(v -> onSecondary());
         mSkipTerminal.setOnClickListener(v -> openTerminal(false));
 
-        if (ApolloSetup.isSetupDone(this) && ApolloSetup.isAdbEnabled(this)) {
+        String savedSn = OpenClawBootstrap.getSavedSn(this);
+        if (savedSn != null && !savedSn.isEmpty()) mSnInput.setText(savedSn);
+
+        if (ApolloSetup.isSetupDone(this) && ApolloSetup.isAdbEnabled(this)
+            && OpenClawBootstrap.isOpenClawInstalled()) {
             openTerminal(true);
             return;
         }
         if (ApolloSetup.isSetupDone(this) && !ApolloSetup.isAdbEnabled(this)) {
-            // Reboot often clears the mental model — force ADB step again
             mStep = Step.ADB;
             ApolloSetup.setSetupDone(this, false);
+        } else if (ApolloSetup.isAdbEnabled(this) && !OpenClawBootstrap.isOpenClawInstalled()) {
+            // Continue from OpenClaw if earlier steps done
+            String st = OpenClawBootstrap.readStatus();
+            if (st != null && (st.startsWith("RUNNING") || st.startsWith("QUEUED") || st.startsWith("OK"))) {
+                mStep = Step.OPENCLAW;
+            }
         }
         render();
     }
@@ -72,6 +91,12 @@ public class SetupActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         render();
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopPoll();
+        super.onDestroy();
     }
 
     private void onPrimary() {
@@ -97,10 +122,27 @@ public class SetupActivity extends AppCompatActivity {
                 break;
             case CLIPBOARD_API:
                 ApolloSetup.ensureClipboardShims(this);
-                if (!ApolloSetup.isClipboardReady()) {
-                    Toast.makeText(this, R.string.apollo_setup_clipboard_pending_toast, Toast.LENGTH_LONG).show();
+                mStep = Step.OPENCLAW;
+                break;
+            case OPENCLAW:
+                if (OpenClawBootstrap.isOpenClawInstalled()
+                    || "OK".equals(statusToken(OpenClawBootstrap.readStatus()))) {
+                    mStep = Step.DONE;
+                    break;
                 }
-                mStep = Step.DONE;
+                String sn = mSnInput.getText() == null ? "" : mSnInput.getText().toString().trim();
+                if (sn.isEmpty()) {
+                    Toast.makeText(this, R.string.apollo_setup_sn_required, Toast.LENGTH_LONG).show();
+                    return;
+                }
+                try {
+                    OpenClawBootstrap.startInstall(this, sn);
+                    Toast.makeText(this, R.string.apollo_setup_openclaw_started, Toast.LENGTH_LONG).show();
+                    startPoll();
+                } catch (Exception e) {
+                    Logger.logError(LOG_TAG, "OpenClaw install failed to start: " + e.getMessage());
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                }
                 break;
             case DONE:
                 if (!ApolloSetup.isAdbEnabled(this)) {
@@ -125,9 +167,10 @@ public class SetupActivity extends AppCompatActivity {
             case ADB:
                 openDeveloperSettings();
                 return;
-            case CLIPBOARD_API:
-                // stay / re-check
-                break;
+            case OPENCLAW:
+                // refresh status / retry install
+                render();
+                return;
             case DONE:
                 mStep = Step.WELCOME;
                 ApolloSetup.setSetupDone(this, false);
@@ -141,6 +184,9 @@ public class SetupActivity extends AppCompatActivity {
     private void render() {
         mSecondary.setVisibility(View.VISIBLE);
         mSkipTerminal.setVisibility(ApolloSetup.isSetupDone(this) ? View.VISIBLE : View.GONE);
+        mSnInput.setVisibility(View.GONE);
+        mLog.setVisibility(View.GONE);
+        stopPoll();
 
         switch (mStep) {
             case WELCOME:
@@ -179,13 +225,87 @@ public class SetupActivity extends AppCompatActivity {
                 mPrimary.setText(R.string.apollo_setup_next);
                 mSecondary.setVisibility(View.GONE);
                 break;
+            case OPENCLAW:
+                mSnInput.setVisibility(View.VISIBLE);
+                mLog.setVisibility(View.VISIBLE);
+                String st = OpenClawBootstrap.readStatus();
+                String token = statusToken(st);
+                boolean installed = OpenClawBootstrap.isOpenClawInstalled() || "OK".equals(token);
+                if ("RUNNING".equals(token) || "QUEUED".equals(token)) {
+                    mStatus.setText(R.string.apollo_setup_openclaw_running_title);
+                    mDetail.setText(R.string.apollo_setup_openclaw_running_body);
+                    mPrimary.setText(R.string.apollo_setup_openclaw_wait);
+                    mPrimary.setEnabled(false);
+                    mSecondary.setText(R.string.apollo_setup_refresh);
+                    startPoll();
+                } else if (installed) {
+                    mStatus.setText(R.string.apollo_setup_openclaw_ok_title);
+                    mDetail.setText(getString(R.string.apollo_setup_openclaw_ok_body,
+                        OpenClawBootstrap.getSavedSn(this)));
+                    mPrimary.setEnabled(true);
+                    mPrimary.setText(R.string.apollo_setup_next);
+                    mSecondary.setVisibility(View.GONE);
+                } else if ("FAILED".equals(token)) {
+                    mStatus.setText(R.string.apollo_setup_openclaw_fail_title);
+                    mDetail.setText(R.string.apollo_setup_openclaw_fail_body);
+                    mPrimary.setEnabled(true);
+                    mPrimary.setText(R.string.apollo_setup_openclaw_install);
+                    mSecondary.setText(R.string.apollo_setup_refresh);
+                } else {
+                    mStatus.setText(R.string.apollo_setup_openclaw_title);
+                    mDetail.setText(R.string.apollo_setup_openclaw_body);
+                    mPrimary.setEnabled(true);
+                    mPrimary.setText(R.string.apollo_setup_openclaw_install);
+                    mSecondary.setVisibility(View.GONE);
+                }
+                mLog.setText(OpenClawBootstrap.readLogTail(1200));
+                break;
             case DONE:
                 mStatus.setText(R.string.apollo_setup_done_title);
                 mDetail.setText(ApolloSetup.readinessSummary(this) + "\n\n" + getString(R.string.apollo_setup_done_body));
+                mPrimary.setEnabled(true);
                 mPrimary.setText(R.string.apollo_setup_enter);
                 mSecondary.setText(R.string.apollo_setup_rerun);
                 break;
         }
+    }
+
+    private void startPoll() {
+        stopPoll();
+        mPollInstall = new Runnable() {
+            @Override
+            public void run() {
+                if (mStep != Step.OPENCLAW) return;
+                String st = OpenClawBootstrap.readStatus();
+                String token = statusToken(st);
+                mLog.setText(OpenClawBootstrap.readLogTail(1200));
+                if ("OK".equals(token) || OpenClawBootstrap.isOpenClawInstalled()) {
+                    mPrimary.setEnabled(true);
+                    render();
+                    return;
+                }
+                if ("FAILED".equals(token)) {
+                    mPrimary.setEnabled(true);
+                    render();
+                    return;
+                }
+                mHandler.postDelayed(this, 2000);
+            }
+        };
+        mHandler.postDelayed(mPollInstall, 1500);
+    }
+
+    private void stopPoll() {
+        if (mPollInstall != null) {
+            mHandler.removeCallbacks(mPollInstall);
+            mPollInstall = null;
+        }
+    }
+
+    private static String statusToken(String status) {
+        if (status == null || status.isEmpty()) return "";
+        String first = status.trim().split("\\s+")[0];
+        return first;
     }
 
     private void openTerminal(boolean finishSetup) {

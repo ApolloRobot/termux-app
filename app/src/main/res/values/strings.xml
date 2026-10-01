@@ -243,7 +243,21 @@
     <string name="apollo_setup_rerun">重新检查</string>
     <string name="apollo_setup_open_terminal">打开终端</string>
     <string name="apollo_setup_welcome_title">欢迎使用掌玩 Worker</string>
-    <string name="apollo_setup_welcome_body">本 App 基于 Termux 封装。\n\n业务脚本通过 ADB 操控其它 App；剪贴板已内置进本 App（无需再装 Termux:API）；开机后自动执行 ~/.termux/boot 脚本拉起 sshd / OpenClaw。\n\n请按向导完成必要设置，否则无法正常发帖与运维。</string>
+    <string name="apollo_setup_welcome_body">本 App 基于 Termux 封装，已内置 OpenClaw 安装流程。\n\n• ADB：脚本操控其它 App 的必需能力\n• 剪贴板：已内置，无需 Termux:API\n• 开机：自动跑 ~/.termux/boot（sshd / OpenClaw）\n• OpenClaw：向导填 SN 后一键安装（需联网）\n\n请按向导完成设置。</string>
+    <string name="apollo_setup_sn_hint">设备 SN，例如 OC260501010</string>
+    <string name="apollo_setup_sn_required">请填写设备 SN</string>
+    <string name="apollo_setup_openclaw_title">安装 OpenClaw</string>
+    <string name="apollo_setup_openclaw_body">将安装：nodejs、openclaw@2026.7.1-2、飞书插件、android-worker-node skill，并启用 openclaw / mqtt-reporter / device-provisioner 服务。\n需联网（npmmirror）。请填写本机 SN 后开始。</string>
+    <string name="apollo_setup_openclaw_install">开始安装 OpenClaw</string>
+    <string name="apollo_setup_openclaw_started">已开始安装，请保持 App 在前台并等待…</string>
+    <string name="apollo_setup_openclaw_running_title">正在安装 OpenClaw…</string>
+    <string name="apollo_setup_openclaw_running_body">首次安装可能需要几分钟（pkg + npm）。请保持网络畅通，不要强杀 App。</string>
+    <string name="apollo_setup_openclaw_wait">安装中…</string>
+    <string name="apollo_setup_openclaw_ok_title">OpenClaw 已就绪</string>
+    <string name="apollo_setup_openclaw_ok_body">SN=%1$s 已写入。开机将自动拉起 gateway / mqtt-reporter。</string>
+    <string name="apollo_setup_openclaw_fail_title">OpenClaw 安装失败</string>
+    <string name="apollo_setup_openclaw_fail_body">请检查网络后重试。完整日志：~/.apollo-logs/openclaw-install.log</string>
+    <string name="apollo_setup_refresh">刷新状态</string>
     <string name="apollo_setup_battery_title">关闭电池优化</string>
     <string name="apollo_setup_battery_body">请允许「不受电池优化」，否则开机后进程容易被系统杀掉，MQTT / OpenClaw 会掉线。</string>
     <string name="apollo_setup_battery_action">去授权</string>

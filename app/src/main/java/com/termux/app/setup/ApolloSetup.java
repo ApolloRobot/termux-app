@@ -134,6 +134,9 @@ public final class ApolloSetup {
         sb.append("ADB: ").append(isAdbEnabled(context) ? "OK" : "MISSING").append('\n');
         sb.append("Boot scripts: ").append(hasBootScripts() ? "OK" : "MISSING").append('\n');
         sb.append("Clipboard (in-app): ").append(isClipboardReady() ? "OK" : "MISSING").append('\n');
+        sb.append("OpenClaw: ").append(OpenClawBootstrap.isOpenClawInstalled() ? "OK" : "MISSING").append('\n');
+        String sn = OpenClawBootstrap.getSavedSn(context);
+        if (sn != null && !sn.isEmpty()) sb.append("SN: ").append(sn).append('\n');
         return sb.toString();
     }
 
