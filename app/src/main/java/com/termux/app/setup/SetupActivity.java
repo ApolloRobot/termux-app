@@ -258,7 +258,7 @@ public class SetupActivity extends AppCompatActivity {
                     mPrimary.setText(R.string.apollo_setup_openclaw_install);
                     mSecondary.setVisibility(View.GONE);
                 }
-                mLog.setText(OpenClawBootstrap.readLogTail(1200));
+                mLog.setText(friendlyInstallProgress(st));
                 break;
             case DONE:
                 mStatus.setText(R.string.apollo_setup_done_title);
@@ -278,7 +278,7 @@ public class SetupActivity extends AppCompatActivity {
                 if (mStep != Step.OPENCLAW) return;
                 String st = OpenClawBootstrap.readStatus();
                 String token = statusToken(st);
-                mLog.setText(OpenClawBootstrap.readLogTail(1200));
+                mLog.setText(friendlyInstallProgress(st));
                 if ("OK".equals(token) || OpenClawBootstrap.isOpenClawInstalled()) {
                     mPrimary.setEnabled(true);
                     render();
@@ -306,6 +306,22 @@ public class SetupActivity extends AppCompatActivity {
         if (status == null || status.isEmpty()) return "";
         String first = status.trim().split("\\s+")[0];
         return first;
+    }
+
+    /** Customer-facing progress; never expose "openclaw" / npm package names. */
+    private static String friendlyInstallProgress(String status) {
+        if (status == null || status.isEmpty()) return "等待开始…";
+        String s = status.toLowerCase();
+        if (s.startsWith("ok")) return "初始化完成";
+        if (s.startsWith("failed")) return "初始化失败，请重试";
+        if (s.contains("pkg") || s.contains("base")) return "正在准备基础环境…";
+        if (s.contains("npm") || s.contains("openclaw")) return "正在安装核心组件（已锁定稳定版）…";
+        if (s.contains("config") || s.contains("sn")) return "正在写入设备配置…";
+        if (s.contains("feishu") || s.contains("plugin")) return "正在安装通道组件…";
+        if (s.contains("skill")) return "正在部署技能包…";
+        if (s.contains("service") || s.contains("termux-services")) return "正在启动后台服务…";
+        if (s.startsWith("running") || s.startsWith("queued")) return "初始化进行中…";
+        return "初始化进行中…";
     }
 
     private void openTerminal(boolean finishSetup) {

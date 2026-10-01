@@ -131,12 +131,12 @@ public final class ApolloSetup {
 
     public static String readinessSummary(Context context) {
         StringBuilder sb = new StringBuilder();
-        sb.append("ADB: ").append(isAdbEnabled(context) ? "OK" : "MISSING").append('\n');
-        sb.append("Boot scripts: ").append(hasBootScripts() ? "OK" : "MISSING").append('\n');
-        sb.append("Clipboard (in-app): ").append(isClipboardReady() ? "OK" : "MISSING").append('\n');
-        sb.append("OpenClaw: ").append(OpenClawBootstrap.isOpenClawInstalled() ? "OK" : "MISSING").append('\n');
+        sb.append("USB调试: ").append(isAdbEnabled(context) ? "正常" : "未开启").append('\n');
+        sb.append("开机自启: ").append(hasBootScripts() ? "正常" : "缺失").append('\n');
+        sb.append("输入能力: ").append(isClipboardReady() ? "正常" : "缺失").append('\n');
+        sb.append("工作环境: ").append(OpenClawBootstrap.isOpenClawInstalled() ? "正常" : "未初始化").append('\n');
         String sn = OpenClawBootstrap.getSavedSn(context);
-        if (sn != null && !sn.isEmpty()) sb.append("SN: ").append(sn).append('\n');
+        if (sn != null && !sn.isEmpty()) sb.append("设备SN: ").append(sn).append('\n');
         return sb.toString();
     }
 

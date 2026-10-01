@@ -14,8 +14,13 @@ export NPM_CONFIG_REGISTRY="${NPM_CONFIG_REGISTRY:-https://registry.npmmirror.co
 NPM_MIRROR="${NPM_CONFIG_REGISTRY}"
 NPM_FALLBACK="${NPM_FALLBACK:-https://registry.npmjs.org}"
 OPENCLAW_PKG="${OPENCLAW_PKG:-openclaw@2026.7.1-2}"
+OPENCLAW_PIN_VERSION="${OPENCLAW_PIN_VERSION:-2026.7.1-2}"
 FEISHU_PKG="${FEISHU_PKG:-@openclaw/feishu@2026.7.1}"
 SKILL_VERSION="${SKILL_VERSION:-1.2.174}"
+# 禁止 latest：新版本常因 koffi/cmake/配置 schema 在 Termux 起不来
+if [[ "$OPENCLAW_PKG" == *"@latest"* ]] || [[ "$OPENCLAW_PKG" == "openclaw" ]]; then
+  OPENCLAW_PKG="openclaw@${OPENCLAW_PIN_VERSION}"
+fi
 
 LOG_DIR="$HOME/.apollo-logs"
 mkdir -p "$LOG_DIR"
@@ -90,27 +95,46 @@ EOF
   chmod +x "$HOME/.termux/boot/10-sshd.sh"
 fi
 
-mark "RUNNING" "openclaw npm"
-if openclaw --version 2>/dev/null | grep -qi openclaw; then
-  echo "openclaw already: $(openclaw --version 2>/dev/null | head -1)"
+mark "RUNNING" "core npm"
+PIN_FILE="$HOME/.openclaw/.apollo-pinned-version"
+mkdir -p ~/.openclaw
+
+# 已安装则只允许钉死版本；绝不自动升到最新
+if command -v openclaw >/dev/null 2>&1; then
+  CUR="$(openclaw --version 2>/dev/null | tr -d '\r' | head -1 || true)"
+  echo "core already present: $CUR"
+  if [[ -f "$PIN_FILE" ]]; then
+    WAS="$(cat "$PIN_FILE" 2>/dev/null || true)"
+    echo "pinned=$WAS want=$OPENCLAW_PIN_VERSION"
+  fi
+  # 若版本字符串不含 pin，也不强行 npm update（避免把机子升挂）
+  if ! echo "$CUR" | grep -q "$OPENCLAW_PIN_VERSION"; then
+    echo "WARN: installed core is not $OPENCLAW_PIN_VERSION; keep as-is (no auto-upgrade)"
+  fi
 else
+  echo "install pinned core $OPENCLAW_PKG (never @latest)"
   npm install "$OPENCLAW_PKG" --force -g \
     || npm install "$OPENCLAW_PKG" --force -g --registry "$NPM_FALLBACK" \
-    || fail "npm install $OPENCLAW_PKG failed"
+    || fail "core package install failed"
   node "$PREFIX/lib/node_modules/openclaw/scripts/postinstall-bundled-plugins.mjs" 2>/dev/null || true
 fi
-openclaw --version || fail "openclaw not runnable"
+command -v openclaw >/dev/null || fail "core binary missing"
+openclaw --version || fail "core not runnable"
+echo "$OPENCLAW_PIN_VERSION" >"$PIN_FILE"
 
 mark "RUNNING" "config+sn"
 mkdir -p ~/.openclaw/agents/main/sessions
-cp -f "$ASSET_DIR/openclaw.json" ~/.openclaw/openclaw.json
+# 已有配置不覆盖（避免冲掉运维改过的模型/中转站）；仅缺文件时写入模板
+if [[ ! -f ~/.openclaw/openclaw.json ]]; then
+  cp -f "$ASSET_DIR/openclaw.json" ~/.openclaw/openclaw.json
+fi
 chmod 700 ~/.openclaw
 cat > ~/.openclaw/mno_device.json << EOF
-{"sn":"$SN","assignedAt":"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)","source":"apollo-app"}
+{"sn":"$SN","assignedAt":"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)","source":"apollo-app","corePin":"$OPENCLAW_PIN_VERSION"}
 EOF
 openclaw config validate 2>&1 | tail -5 || true
 
-mark "RUNNING" "feishu plugin"
+mark "RUNNING" "channel plugin"
 NPM_CONFIG_REGISTRY="$NPM_MIRROR" openclaw plugins install "$FEISHU_PKG" --force 2>&1 | tail -20 || true
 openclaw plugins list 2>&1 | grep -i feishu || true
 
@@ -193,5 +217,5 @@ echo "[$(date -Iseconds)] boot openclaw done" >>"$LOG"
 EOF
 chmod +x "$HOME/.termux/boot/20-openclaw.sh"
 
-mark "OK" "sn=$SN skill=$SKILL_VERSION"
-echo "✅ OpenClaw install complete for SN=$SN"
+mark "OK" "sn=$SN skill=$SKILL_VERSION pin=$OPENCLAW_PIN_VERSION"
+echo "✅ worker setup complete for SN=$SN (core pin $OPENCLAW_PIN_VERSION)"

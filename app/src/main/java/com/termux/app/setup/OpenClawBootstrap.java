@@ -139,7 +139,7 @@ public final class OpenClawBootstrap {
         executeIntent.setClassName(TermuxConstants.TERMUX_PACKAGE_NAME,
             TermuxConstants.TERMUX_APP.TERMUX_SERVICE_NAME);
         executeIntent.putExtra(TERMUX_SERVICE.EXTRA_BACKGROUND, true);
-        executeIntent.putExtra(TERMUX_SERVICE.EXTRA_COMMAND_LABEL, "Apollo OpenClaw Install");
+        executeIntent.putExtra(TERMUX_SERVICE.EXTRA_COMMAND_LABEL, "Apollo Worker Setup");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(executeIntent);
