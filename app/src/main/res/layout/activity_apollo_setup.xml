@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#101820">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/apollo_setup_brand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/apollo_brand_name"
+            android:textColor="#7DDCB5"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/apollo_setup_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:paddingBottom="12dp" />
+
+        <TextView
+            android:id="@+id/apollo_setup_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#C8D0D8"
+            android:textSize="15sp"
+            android:lineSpacingExtra="4dp"
+            android:paddingBottom="24dp" />
+
+        <Button
+            android:id="@+id/apollo_setup_primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/apollo_setup_next" />
+
+        <Button
+            android:id="@+id/apollo_setup_secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            style="?android:attr/buttonStyleSmall"
+            android:text="@string/apollo_setup_skip" />
+
+        <Button
+            android:id="@+id/apollo_setup_open_terminal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            style="?android:attr/buttonStyleSmall"
+            android:visibility="gone"
+            android:text="@string/apollo_setup_open_terminal" />
+
+    </LinearLayout>
+</ScrollView>

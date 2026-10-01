@@ -1,1 +1,3 @@
 include ':app', ':termux-shared', ':terminal-emulator', ':terminal-view'
+include ':termux-am-library'
+project(':termux-am-library').projectDir = new File(rootDir, 'third_party/termux-am-library/termux-am-library')

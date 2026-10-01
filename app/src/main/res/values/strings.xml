@@ -2,7 +2,7 @@
 
 <!DOCTYPE resources [
     <!ENTITY TERMUX_PACKAGE_NAME "com.termux">
-    <!ENTITY TERMUX_APP_NAME "Termux">
+    <!ENTITY TERMUX_APP_NAME "掌玩 Worker">
     <!ENTITY TERMUX_API_APP_NAME "Termux:API">
     <!ENTITY TERMUX_BOOT_APP_NAME "Termux:Boot">
     <!ENTITY TERMUX_FLOAT_APP_NAME "Termux:Float">
@@ -234,5 +234,33 @@
 
     <!-- Donate Preference -->
     <string name="donate_preference_title">Donate</string>
+
+    <!-- Apollo Worker Setup -->
+    <string name="apollo_brand_name">掌玩 Worker</string>
+    <string name="apollo_setup_next">下一步</string>
+    <string name="apollo_setup_skip">跳过</string>
+    <string name="apollo_setup_enter">进入工作台</string>
+    <string name="apollo_setup_rerun">重新检查</string>
+    <string name="apollo_setup_open_terminal">打开终端</string>
+    <string name="apollo_setup_welcome_title">欢迎使用掌玩 Worker</string>
+    <string name="apollo_setup_welcome_body">本 App 基于 Termux 封装。\n\n业务脚本通过 ADB 操控其它 App；剪贴板输入依赖 Termux:API；开机后由本 App 自动执行 ~/.termux/boot 脚本拉起 sshd / OpenClaw。\n\n请按向导完成必要设置，否则无法正常发帖与运维。</string>
+    <string name="apollo_setup_battery_title">关闭电池优化</string>
+    <string name="apollo_setup_battery_body">请允许「不受电池优化」，否则开机后进程容易被系统杀掉，MQTT / OpenClaw 会掉线。</string>
+    <string name="apollo_setup_battery_action">去授权</string>
+    <string name="apollo_setup_adb_title">必须开启 USB 调试（ADB）</string>
+    <string name="apollo_setup_adb_body">ADB 不是可选项。\nTermux 里的脚本通过 ADB 点击、滑动、输入，从而操作小红书 / 抖音等 App。\n\n请打开：设置 → 开发者选项 → USB 调试。\n完成后回到本页点「下一步」。</string>
+    <string name="apollo_setup_adb_ok_title">ADB 已开启</string>
+    <string name="apollo_setup_adb_ok_body">已检测到 USB 调试开启。请保持开启；重启后若被关掉，App 会再次要求打开。</string>
+    <string name="apollo_setup_adb_open_settings">打开开发者选项</string>
+    <string name="apollo_setup_adb_required_toast">未开启 USB 调试，无法继续。这是控 App 的必需能力。</string>
+    <string name="apollo_setup_boot_title">开机自启脚本</string>
+    <string name="apollo_setup_boot_body">已内置 Termux:Boot 能力。默认脚本会安装到：\n%1$s\n\n开机后自动拉起 sshd 与 OpenClaw 相关服务（可按机子再改脚本）。</string>
+    <string name="apollo_setup_api_title">还需要 Termux:API（剪贴板）</string>
+    <string name="apollo_setup_api_body">中文输入走 termux-clipboard-set，必须安装同签名的 Termux:API APK（包名 com.termux.api）。\n本试验版尚未把 Clipboard 并进主包；请用同一签名安装 API 插件后再继续。</string>
+    <string name="apollo_setup_api_ok_title">Termux:API 已安装</string>
+    <string name="apollo_setup_api_ok_body">已检测到 com.termux.api，剪贴板输入可用。</string>
+    <string name="apollo_setup_api_missing_toast">未检测到 Termux:API，发帖输入可能失败。可稍后安装同签名 API APK。</string>
+    <string name="apollo_setup_done_title">就绪检查</string>
+    <string name="apollo_setup_done_body">ADB 为硬门槛：未开启时请勿认为设备已可用。\n进入工作台后即是 Termux 终端环境。</string>
 
 </resources>
